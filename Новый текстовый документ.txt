@@ -1,0 +1,105 @@
+HQ-SRV 	192.168.200.100/24
+
+BR-SRV 	172.16.100.100/24
+apt  install  docker  docker.io  nginx  
+systemctl   start   docker   &&   systemctl   enable   --now docker 
+ISP 	1 ПОДКЛЮЧЕНИЕ IP address: 4.4.4.1/24
+	2 ПОДКЛЮЧЕНИЕ IP address: 5.5.5.1/24
+	3 ПОДКЛЮЧЕНИЕ IP address: 3.3.3.1/24
+nano /etc/sysctl.conf
+
+HQ-CLI 192.168.200.200/24
+DNS   4.4.4.1
+
+CLI 3.3.3.10
+
+HQ-CLI
+apt install openssl
+nano   /etc/ssl/openssl.cnf
+state - delete
+0.organizationName_default = DEMO.WSR
+сommonName_default              = dns.int.demo.wsr  
+cd /usr/lib/ssl/misc  nano ./CA.pl
+
+HQ-SRV
+apt install bind9
+mkdir /opt/dns
+cp /etc/bind/db.local /opt/dns/demo.wsr
+chown -R bind:bind /opt/dns
+nano   /etc/apparmor.d//usr.sbin.named  добавить /opt/dns/** rw,
+
+nano /opt/dns/demo.db 
+hq.work\ hq-r\srv.hq.work  root.hq.work  
+hq-srv.hq.work  \ hq-srv.hq-r.hq.work
+isp	3.3.3.1
+hq-r	4.4.4.100
+br-r	5.5.5.100
+hq-srv	192.168.200.100
+hq-cli	192.168.200.200
+hq-ad	192.168.200.201
+
+br.work\ br-r\srv.branch.work  root.br.work
+br-srv.br\branch.work
+isp	3.3.3.1
+hq-r	4.4.4.100
+br-r	5.5.5.100
+br-srv	172.16.100.100
+
+nano /etc/bind/named.conf.options
+forw 3.3.3.1
+dns no
+allow-query any
+listen none
+recursion yes
+allow-recursion{192.168.200.0/24; 172.16.100.0/24};
+
+nano /etc/bind/named.conf.default-zones 
+hq.work & br.work
+allow-transfer any
+/opt/dns/demo.db
+101.168.192  back.101.168.db
+
+cp /opt/dns/demo.db /opt/dns/back.101.168.db
+
+HQ-CLI 
+apt install mdadm -y
+mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sdb /dev/sdc
+mkfs -t ext4 /dev/md0 
+mkdir /mnt/storage
+
+nano /etc/fstab
+/dev/md127 /mnt/storage ext4 defaults 0 0
+
+mount /dev/md127 /mnt/storage
+
+ISP
+apt install chrony -y
+nano /etc/chrony/chrony.conf
+server ISP
+local stratum 4
+allow 3.3.3.10
+allow 3.3.3.1
+allow 4.4.4.1
+allow 4.4.4.100
+
+HQ-SRV
+apt install chrony -y
+nano /etc/chrony/chrony.conf
+server HQ-SRV
+allow 192.168.200.200
+allow 192.168.200.100
+allow 192.168.200.254
+allow 172.16.100.254
+allow 172.16.100.100
+pool 3.3.3.1 iburst
+
+All
+dpkg-reconfigure tzdata 
+nano    /etc/ssh/sshd_config убрать # 
+pico  /etc/issue
+
+BR-SRV
+apt install sqlite3 -y
+sqlite3 altlinux.db
+create table PC5(
+asdasdad);
